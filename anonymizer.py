@@ -1,5 +1,5 @@
 """
-run semi_partition with given parameters
+run basic_mondrian with given parameters
 """
 
 # !/usr/bin/env python
@@ -16,7 +16,7 @@ DATA_SELECT = 'a'
 
 
 def get_result_one(att_trees, data, k=10):
-    "run semi_partition for one time, with k=10"
+    "run basic_mondrian for one time, with k=10"
     print "K=%d" % k
     print "Mondrian"
     data_back = copy.deepcopy(data)
@@ -71,11 +71,10 @@ def get_result_dataset(att_trees, data, k=10, n=10):
         print "size of dataset %d" % pos
         for j in range(n):
             temp = random.sample(data, pos)
-            result, eval_result = semi_partition(att_trees, temp, k)
+            result, eval_result = mondrian(att_trees, temp, k)
             ncp += eval_result[0]
             rtime += eval_result[1]
             data = copy.deepcopy(data_back)
-            # save_to_file((att_trees, temp, result, k, L))
         ncp /= n
         rtime /= n
         print "Average NCP %0.2f" % ncp + "%"
@@ -98,7 +97,7 @@ def get_result_qi(att_trees, data, k=10):
     for i in reversed(range(1, ls)):
         print '#' * 30
         print "Number of QI=%d" % i
-        _, eval_result = semi_partition(att_trees, data, k, i)
+        _, eval_result = mondrian(att_trees, data, k, i)
         data = copy.deepcopy(data_back)
         print "NCP %0.2f" % eval_result[0] + "%"
         all_ncp.append(round(eval_result[0], 2))
@@ -149,4 +148,4 @@ if __name__ == '__main__':
         print "K: varying k, qi: varying qi numbers, data: varying size of dataset, \
                 one: run only once"
     # anonymized dataset is stored in result
-    print "Finish Semi_Partition!!"
+    print "Finish Basic_Mondrian!!"
