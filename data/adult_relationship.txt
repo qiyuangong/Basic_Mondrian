@@ -1,0 +1,6 @@
+Wife;*
+Own-child;*
+Husband;*
+Not-in-family;*
+Other-relative;*
+Unmarried;*

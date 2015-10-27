@@ -1,0 +1,14 @@
+Tech-support;*
+Craft-repair;*
+Other-service;*
+Sales;*
+Exec-managerial;*
+Prof-specialty;*
+Handlers-cleaners;*
+Machine-op-inspct;*
+Adm-clerical;*
+Farming-fishing;*
+Transport-moving;*
+Priv-house-serv;*
+Protective-serv;*
+Armed-Forces;*
