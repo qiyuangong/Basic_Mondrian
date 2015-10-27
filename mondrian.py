@@ -287,7 +287,7 @@ def check_splitable(partition):
     return True
 
 
-def init(att_trees, data, K, QI_num=-1):
+def init(att_trees, data, k, QI_num=-1):
     """
     reset all global variables
     """
@@ -302,12 +302,12 @@ def init(att_trees, data, K, QI_num=-1):
         QI_LEN = len(data[0]) - 1
     else:
         QI_LEN = QI_num
-    GL_K = K
+    GL_K = k
     RESULT = []
     QI_RANGE = []
 
 
-def mondrian(att_trees, data, K, QI_num=-1):
+def mondrian(att_trees, data, k, QI_num=-1):
     """
     basic Mondrian for k-anonymity.
     This fuction support both numeric values and categoric values.
@@ -315,7 +315,7 @@ def mondrian(att_trees, data, K, QI_num=-1):
     For categoric values, each iterator is a split on GH.
     The final result is returned in 2-dimensional list.
     """
-    init(att_trees, data, K, QI_num)
+    init(att_trees, data, k, QI_num)
     result = []
     middle = []
     wtemp = []
@@ -351,7 +351,7 @@ def mondrian(att_trees, data, K, QI_num=-1):
         print "Losing records during anonymization!!"
         pdb.set_trace()
     if __DEBUG:
-        print "K=%d" % K
+        print "K=%d" % k
         print "size of partitions"
         print len(RESULT)
         temp = [len(t) for t in RESULT]
