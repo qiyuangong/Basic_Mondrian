@@ -5,4 +5,4 @@ Federal-gov;gov;*
 Local-gov;gov;*
 State-gov;gov;*
 Without-pay;not-work;*
-Never-worked;;not-work;*
+Never-worked;not-work;*
