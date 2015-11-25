@@ -12,10 +12,11 @@ from utils.read_informs_data import read_tree as read_informs_tree
 import sys, copy, random
 
 DATA_SELECT = 'a'
+DEFAULT_K = 10
 # sys.setrecursionlimit(50000)
 
 
-def get_result_one(att_trees, data, k=10):
+def get_result_one(att_trees, data, k=DEFAULT_K):
     "run basic_mondrian for one time, with k=10"
     print "K=%d" % k
     print "Mondrian"
@@ -47,7 +48,7 @@ def get_result_k(att_trees, data):
     print "All Running time", all_rtime
 
 
-def get_result_dataset(att_trees, data, k=10, n=10):
+def get_result_dataset(att_trees, data, k=DEFAULT_K, n=10):
     """
     fix k and QI, while changing size of dataset
     n is the proportion nubmber.
@@ -86,7 +87,7 @@ def get_result_dataset(att_trees, data, k=10, n=10):
     print "All Running time", all_rtime
 
 
-def get_result_qi(att_trees, data, k=10):
+def get_result_qi(att_trees, data, k=DEFAULT_K):
     """
     change nubmber of QI, whle fixing k and size of dataset
     """
@@ -94,7 +95,7 @@ def get_result_qi(att_trees, data, k=10):
     ls = len(data[0])
     all_ncp = []
     all_rtime = []
-    for i in reversed(range(1, ls)):
+    for i in range(1, ls):
         print '#' * 30
         print "Number of QI=%d" % i
         _, eval_result = mondrian(att_trees, data, k, i)
