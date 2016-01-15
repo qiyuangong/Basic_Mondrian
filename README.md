@@ -20,7 +20,7 @@ My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your
 
 1) Download (or clone) the whole project. 
 
-2) Run "anonymized.py" in root dir with CLI.
+2) Run `anonymized.py` in root dir with CLI.
 
 Parameters:
 

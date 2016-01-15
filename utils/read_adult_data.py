@@ -24,7 +24,7 @@ ATT_NAMES = ['age', 'workclass', 'final_weight', 'education',
 # other categorical attributes only have 2-level generalization hierarchies.
 QI_INDEX = [0, 1, 4, 5, 6, 8, 9, 13]
 IS_CAT = [False, True, False, True, True, True, True, True]
-gl_SA_index = -1
+SA_INDEX = -1
 
 __DEBUG = False
 
@@ -59,7 +59,7 @@ def read_data():
                 except KeyError:
                     numeric_dict[i][temp[index]] = 1
             ltemp.append(temp[index])
-        ltemp.append(temp[gl_SA_index])
+        ltemp.append(temp[SA_INDEX])
         data.append(ltemp)
     # pickle numeric attributes and get NumRange
     for i in range(QI_num):
