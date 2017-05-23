@@ -1,8 +1,10 @@
 Basic Mondrian
 ===========================
-Mondrian is a Top-down greedy data anonymization algorithm for relational dataset, proposed by Kristen LeFevre in his papers[1]. The raw mondrian is designed for numerical attributes. When comes to categorical attributes, Mondrian needs to transform categorical attributes to numerical ones. This transformations is not good for some applications. In 2006[2], LeFevre proposed basic Mondrian, which supports both categorical and numerical attributes. The basic Mondrian can efficiently split categorical attributes with the help of generlization hierachies.
+Mondrian is a Top-down greedy data anonymization algorithm for relational dataset, proposed by Kristen LeFevre in his papers[1]. The raw Mondrian is designed for numerical attributes. When comes to categorical attributes, Mondrian needs to transform categorical attributes to numerical ones. This transformation is not good for some applications. In 2006[2], LeFevre proposed basic Mondrian, which supports both categorical and numerical attributes, named `Basic_Mondrian`. The `Basic_Mondrian` can efficiently split categorical attributes with the help of generalization hierarchies.
 
-This repository is an **open source python implementation for baisc Mondrian**. I implement this algorithm in python for further study.
+**Note that in most paper who claim that they used Mondrian with generalization hierarchies, it must be `Basic_Mondrian`. Because raw Mondrian doesn't need generalization hierarchies.** 
+
+This repository is an **open source python implementation for basic Mondrian**. I implement this algorithm in python for further study.
 
 ### Motivation 
 Researches on data privacy have lasted for more than ten years, lots of great papers have been published. However, only a few open source projects are available on Internet [3-4], most open source projects are using algorithms proposed before 2004! Fewer projects have been used in real life. Worse more, most people even don't hear about it. Such a tragedy! 
@@ -14,9 +16,25 @@ I used **both adult and INFORMS** dataset in this implementation. For clarificat
 
 The Final NCP of basic Mondrian on adult dataset is about 28.52% and 18.52% on INFORMS data (with K=10). Although the NCP of basic Mondrian is higher than raw Mondrian, the results on categorical attributes are more meaningful than raw Mondrian.
 
+### Basic Idea
+
+Hope you have read the basic idea of [Mondrian](https://github.com/qiyuangong/Mondrian). `Basic_Mondrian` is an extended version of Mondrian. Then, you can read below.
+
+#### First, what are Generalization Hierarchies?
+
+For some numerical or categorical values, range values are meaningless, for example [Male-Female], ICD09 [200-210]. In this case, these presentations will break the semantic information in these values. To avoid this issue, pre-defined generalization hierarchies are introduced. Note that all nodes in hierarchies should have their natural meaning. Imaging you have a large set of numerical disease values, e.g., ICD09. A pre-defined hierarchy is [always there](http://icd9.chrisendres.com/index.php?action=contents). Then, you can use generalize values according to this hierarchy. During generalization, all values involved can be transform to a more general value in their common ancestors. For example, 291, 295 etc. can be transformed to 290-319 (MENTAL DISORDERS).
+
+<p align="center">
+<img src=https://cloud.githubusercontent.com/assets/3848789/26336347/807be240-3fa4-11e7-87a7-d28a05d914a2.png width=750>
+</p>
+<p align="center">
+Figure 1. Generalization Based on Generalization Hierarchies.
+</p>
+
+As shown in Fig. 1(a), numerical Age value can be evenly split into balanced a generalization hierarchy. This presentation is more uniform for analyzer. This is another benefit of generalization hierarchies.
 
 ### Usage and Parameters:
-My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your Python environment is collectly installed. You can run Mondrian in following steps: 
+My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your Python environment is correctly installed. You can run Mondrian in following steps: 
 
 1) Download (or clone) the whole project. 
 
@@ -46,6 +64,7 @@ Parameters:
 [5] G. Ghinita, P. Karras, P. Kalnis, N. Mamoulis. Fast data anonymization with low information loss. Proceedings of the 33rd international conference on Very large data bases, VLDB Endowment, 2007, 758-769
 
 ==========================
+
 by Qiyuan Gong
 qiyuangong@gmail.com
 
