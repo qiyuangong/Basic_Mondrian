@@ -16,12 +16,21 @@ DEFAULT_K = 10
 # sys.setrecursionlimit(50000)
 
 
+def write_to_file(result):
+    """
+    write the anonymized result to anonymized.data
+    """
+    with open("data/anonymized.data", "w") as output:
+        for r in result:
+            output.write(';'.join(r) + '\n')
+
+
 def get_result_one(att_trees, data, k=DEFAULT_K):
     "run basic_mondrian for one time, with k=10"
     print "K=%d" % k
     print "Mondrian"
-    data_back = copy.deepcopy(data)
-    _, eval_result = mondrian(att_trees, data, k)
+    result, eval_result = mondrian(att_trees, data, k)
+    write_to_file(result)
     print "NCP %0.2f" % eval_result[0] + "%"
     print "Running time %0.2f" % eval_result[1] + "seconds"
 
@@ -144,7 +153,7 @@ if __name__ == '__main__':
     elif FLAG == '':
         get_result_one(ATT_TREES, RAW_DATA)
     else:
-        print "Usage: python anonymizer [a | i] [k | qi | data | one]"
+        print "Usage: python anonymizer.py [a | i] [k | qi | data | one]"
         print "a: adult dataset, 'i': INFORMS ataset"
         print "K: varying k, qi: varying qi numbers, data: varying size of dataset, \
                 one: run only once"

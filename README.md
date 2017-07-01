@@ -1,4 +1,4 @@
-Basic Mondrian
+Basic Mondrian [![Build Status](https://travis-ci.org/qiyuangong/Basic_Mondrian.svg?branch=master)](https://travis-ci.org/qiyuangong/Basic_Mondrian)
 ===========================
 Mondrian is a Top-down greedy data anonymization algorithm for relational dataset, proposed by Kristen LeFevre in his papers[1]. The raw Mondrian is designed for numerical attributes. When comes to categorical attributes, Mondrian needs to transform categorical attributes to numerical ones. This transformation is not good for some applications. In 2006[2], LeFevre proposed basic Mondrian, which supports both categorical and numerical attributes, named `Basic_Mondrian`. The `Basic_Mondrian` can efficiently split categorical attributes with the help of generalization hierarchies.
 
@@ -40,6 +40,8 @@ My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your
 
 2) Run `anonymized.py` in root dir with CLI.
 
+3) **Get the anonymized dataset** from `data/anonymized.data`, if you didn't add `[k | qi | data]`.
+
 Parameters:
 
 	# run Mondrian with adult data and default K(K=10)
@@ -63,9 +65,14 @@ Parameters:
 
 [5] G. Ghinita, P. Karras, P. Kalnis, N. Mamoulis. Fast data anonymization with low information loss. Proceedings of the 33rd international conference on Very large data bases, VLDB Endowment, 2007, 758-769
 
+### Support
+
+- You can post bug reports and feature requests at the [Issue Page](https://github.com/qiyuangong/Basic_Mondrian/issues).
+- Contributions via [Pull request](https://github.com/qiyuangong/Basic_Mondrian/pulls) is welcome.
+- Also, you can contact me via [email](mailto:qiyuangong@gmail.com).
+
 ==========================
 
-by Qiyuan Gong
-qiyuangong@gmail.com
+by [Qiyuan Gong](mailto:qiyuangong@gmail.com)
 
 2015-1-21
