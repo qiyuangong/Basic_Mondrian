@@ -1,20 +1,20 @@
 Basic Mondrian [![Build Status](https://travis-ci.org/qiyuangong/Basic_Mondrian.svg?branch=master)](https://travis-ci.org/qiyuangong/Basic_Mondrian)
 ===========================
-Mondrian is a Top-down greedy data anonymization algorithm for relational dataset, proposed by Kristen LeFevre in his papers[1]. The raw Mondrian is designed for numerical attributes. When comes to categorical attributes, Mondrian needs to transform categorical attributes to numerical ones. This transformation is not good for some applications. In 2006[2], LeFevre proposed basic Mondrian, which supports both categorical and numerical attributes, named `Basic_Mondrian`. The `Basic_Mondrian` can efficiently split categorical attributes with the help of generalization hierarchies.
+Mondrian is a Top-down greedy data anonymization algorithm for relational dataset, proposed by Kristen LeFevre in his papers[1]. The original Mondrian is designed for numerical attributes. When comes to categorical attributes, Mondrian needs to transform categorical attributes to numerical ones. This transformation is not good for some applications. In 2006[2], LeFevre proposed basic Mondrian, which supports both categorical and numerical attributes, named `Basic_Mondrian`. The `Basic_Mondrian` can efficiently split categorical attributes with the help of **generalization hierarchies**.
 
-**Note that in most paper who claim that they used Mondrian with generalization hierarchies, it must be `Basic_Mondrian`. Because raw Mondrian doesn't need generalization hierarchies.** 
+**Note that in most papers people claim that they are using Mondrian with generalization hierarchies. In that case, it must be `Basic_Mondrian`. Because original Mondrian doesn't need generalization hierarchies.**
 
 This repository is an **open source python implementation for basic Mondrian**. I implement this algorithm in python for further study.
 
 ### Motivation 
-Researches on data privacy have lasted for more than ten years, lots of great papers have been published. However, only a few open source projects are available on Internet [3-4], most open source projects are using algorithms proposed before 2004! Fewer projects have been used in real life. Worse more, most people even don't hear about it. Such a tragedy! 
+Researches on data privacy have lasted for more than ten years, lots of great papers have been published. However, only a few open source projects are available on Internet [3-4], most open source projects are using algorithms proposed before 2004! Fewer projects have been used in real life. Worse more, most people even don't hear about it. Such a tragedy!
 
-I decided to make some effort. Hoping these open source repositories can help researchers and developers on data privacy (privacy preserving data publishing).
+I decided to make some effort. Hoping these open source repositories can help researchers and developers on data privacy (privacy preserving data publishing, data anonymization).
 
 ### Attention
-I used **both adult and INFORMS** dataset in this implementation. For clarification, **we transform NCP to percentage**. This NCP percentage is computed by dividing NCP value with the number of values in dataset (also called GCP[5]). The range of NCP percentage is from 0 to 1, where 0 means no information loss, 1 means loses all information (more meaningful than raw NCP, which is sensitive to size of dataset). 
+I used **both adult and INFORMS** dataset in this implementation. For clarification, **we transform NCP (Normalized Certainty Penalty) to percentage**. This NCP percentage is computed by dividing NCP value with the number of values in dataset (also called GCP (Global Certainty Penalty) [5]). The range of NCP percentage is from 0 to 1, where 0 means no information loss, 1 means loses all information (more meaningful than original NCP, which is sensitive to size of dataset).
 
-The Final NCP of basic Mondrian on adult dataset is about 28.52% and 18.52% on INFORMS data (with K=10). Although the NCP of basic Mondrian is higher than raw Mondrian, the results on categorical attributes are more meaningful than raw Mondrian.
+The Final NCP of basic Mondrian on [adult dataset](https://archive.ics.uci.edu/ml/datasets/adult) is about 28.52% and 18.52% on [INFORMS data](https://sites.google.com/site/informsdataminingcontest/) (with K=10). Although the NCP of basic Mondrian is higher than original Mondrian, the results on categorical attributes are more meaningful (with the help of well-defined generalization hierarchies).
 
 ### Basic Idea
 
@@ -34,9 +34,9 @@ Figure 1. Generalization Based on Generalization Hierarchies.
 As shown in Fig. 1(a), numerical Age value can be evenly split into balanced a generalization hierarchy. This presentation is more uniform for analyzer. This is another benefit of generalization hierarchies.
 
 ### Usage and Parameters:
-My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your Python environment is correctly installed. You can run Mondrian in following steps: 
+My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your Python environment is correctly installed. You can run Mondrian in following steps:
 
-1) Download (or clone) the whole project. 
+1) Download (or clone) the whole project.
 
 2) Run `anonymized.py` in root dir with CLI.
 
@@ -44,7 +44,7 @@ My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your
 
 Parameters:
 
-	# run Mondrian with adult data and default K(K=10)
+	# run Mondrian with adult data and default K (K=10)
 	python anonymizer.py 
 	
 	# run Mondrian with adult data K=20
