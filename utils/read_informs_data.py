@@ -50,7 +50,7 @@ def read_pickle_file(att_name):
         result = NumRange(sort_value, numeric_dict)
         return result
     except:
-        print "Pickle file not exists!!", att_name
+        print( "Pickle file not exists!!", att_name)
 
 
 def read_tree_file(treename):
@@ -64,7 +64,7 @@ def read_tree_file(treename):
     treefile = open(prefix + treename + postfix, 'rU')
     att_tree['*'] = GenTree('*')
     if __DEBUG:
-        print "Reading Tree" + treename
+        print( "Reading Tree" + treename)
     for line in treefile:
         # delete \n
         if len(line) <= 1:
@@ -83,7 +83,7 @@ def read_tree_file(treename):
             except:
                 att_tree[t] = GenTree(t, att_tree[temp[i - 1]], isleaf)
     if __DEBUG:
-        print "Nodes No. = %d" % att_tree['*'].support
+        print( "Nodes No. = %d" % att_tree['*'].support)
     treefile.close()
     return att_tree
 
@@ -102,7 +102,7 @@ def read_data(flag=0):
         numeric_dict.append(dict())
     # We selet 3,4,5,6,13,15,15 att from demographics05, and 2 from condition05
     if __DEBUG:
-        print "Reading Data..."
+        print( "Reading Data...")
     for i, line in enumerate(userfile):
         line = line.strip()
         # ignore first line of csv
@@ -146,7 +146,7 @@ def read_data(flag=0):
                 for j in range(len(v)):
                     s.add(v[j][i])
                 if len(s) > 1:
-                    print USER_ATT[i], s
+                    print( USER_ATT[i], s)
                     # pdb.set_trace()
         if k in conditiondata:
             # ingnore duplicate values
