@@ -279,24 +279,26 @@ def split_partition(partition, dim):
         return split_categorical_attribute(partition, dim)
 
 
-def anonymize(partition):
-    """
-    Main procedure of Half_Partition.
-    recursively partition groups until not allowable.
+def anonymize(partition: Partition):
+    """ Main procedure of Half_Partition. Recursively partition groups until not allowable.
     """
     # print(len(partition)
     # print(partition.attribute_split_allowed_list
     # pdb.set_trace()
+
+    # Close the EC, if not splittable any more
     if check_splitable(partition) is False:
         RESULT.append(partition)
         return
-    # Choose dim
+    
     dim = choose_dimension(partition)
     if dim == -1:
         print("Error: dim=-1")
         pdb.set_trace()
+
     sub_partitions = split_partition(partition, dim)
     if len(sub_partitions) == 0:
+        # Close the attribute for this partition, as it cannot be split any more
         partition.attribute_split_allowed_list[dim] = 0
         anonymize(partition)
     else:
