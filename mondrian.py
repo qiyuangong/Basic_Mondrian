@@ -7,8 +7,10 @@ main module of basic Mondrian
 
 
 import pdb
-from models.numrange import NumRange
 import time
+
+from models.numrange import NumRange
+from models.partition import Partition
 
 
 __DEBUG = False
@@ -184,8 +186,8 @@ def split_numerical(partition, dim, pattribute_width_list, pattribute_generaliza
     rattribute_width_list = pattribute_width_list[:]
     lattribute_width_list[dim] = (pattribute_width_list[dim][0], middle_pos)
     rattribute_width_list[dim] = (ATT_TREES[dim].dict[nextVal], pattribute_width_list[dim][1])
-    sub_partitions.append(Partition(lhs, lattribute_width_list, lattribute_generalization_list))
-    sub_partitions.append(Partition(rhs, rattribute_width_list, rattribute_generalization_list))
+    sub_partitions.append(Partition(lhs, lattribute_width_list, lattribute_generalization_list, QI_LEN))
+    sub_partitions.append(Partition(rhs, rattribute_width_list, rattribute_generalization_list, QI_LEN))
     return sub_partitions
 
 
@@ -229,7 +231,7 @@ def split_categorical(partition, dim, pattribute_width_list, pattribute_generali
             mtemp = pattribute_generalization_list[:]
             wtemp[dim] = len(sub_node[i])
             mtemp[dim] = sub_node[i].value
-            sub_partitions.append(Partition(sub_group, wtemp, mtemp))
+            sub_partitions.append(Partition(sub_group, wtemp, mtemp, QI_LEN))
     return sub_partitions
 
 
@@ -321,7 +323,7 @@ def mondrian(att_trees, data, k, QI_num=-1):
             QI_RANGE.append(len(ATT_TREES[i]['*']))
             wtemp.append(len(ATT_TREES[i]['*']))
             attribute_generalization_list.append('*')
-    whole_partition = Partition(data, wtemp, attribute_generalization_list)
+    whole_partition = Partition(data, wtemp, attribute_generalization_list, QI_LEN)
     start_time = time.time()
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
