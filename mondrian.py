@@ -306,12 +306,11 @@ def anonymize(partition: Partition):
             anonymize(sub_p)
 
 
-def check_splitable(partition):
-    """
-    Check if the partition can be further splited while satisfying k-anonymity.
-    """
-    temp = sum(partition.attribute_split_allowed_list)
-    if temp == 0:
+def check_splitable(partition: Partition):
+    """ Check if the partition can be further split while satisfying k-anonymity """
+
+    # If the sum is 0, it means that the allow array only contains 0s, that is no attributes is splittable any more
+    if sum(partition.attribute_split_allowed_list) == 0:
         return False
     return True
 
