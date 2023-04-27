@@ -7,9 +7,7 @@ main module of basic Mondrian
 
 
 import pdb
-import random
 from models.numrange import NumRange
-from models.gentree import GenTree
 import time
 
 
@@ -26,27 +24,23 @@ class Partition(object):
 
     """Class for Group, which is used to keep records
     Store tree node in instances.
-    self.member: records in group
-    self.width: width of this partition on each domain. For categoric attribute, it equal
-    the number of leaf node, for numeric attribute, it equal to number range
-    self.middle: save the generalization result of this partition
-    self.allow: 0 donate that not allow to split, 1 donate can be split
+    self.members: records in the partition
+    Lists that store for each QID, under the index for the corresponding attribute,
+        self.attribute_width_list: the width, for categoric attribute, it equal the number of leaf node, for numeric attribute, it equal to number range
+        self.attribute_generalization_list: the result of the generalization
+        self.allow: 0 if the partition cannot be split further along the attribute, 1 otherwise
     """
 
-    def __init__(self, data, width, middle):
-        """
-        initialize with data, width and middle
-        """
-        self.member = list(data)
-        self.width = list(width)
-        self.middle = list(middle)
-        self.allow = [1] * QI_LEN
+    def __init__(self, data, attribute_width_list, attribute_generalization_list):
+        self.members = list(data)
+        self.attribute_width_list = list(attribute_width_list)
+        self.attribute_generalization_list = list(attribute_generalization_list)
+        self.attribute_split_allowed_list = [1] * QI_LEN
 
+    # The number of records in partition
     def __len__(self):
-        """
-        return the number of records in partition
-        """
-        return len(self.member)
+        
+        return len(self.members)
 
 
 def get_normalized_width(partition, index):
@@ -55,11 +49,11 @@ def get_normalized_width(partition, index):
     similar to NCP
     """
     if IS_CAT[index] is False:
-        low = partition.width[index][0]
-        high = partition.width[index][1]
+        low = partition.attribute_width_list[index][0]
+        high = partition.attribute_width_list[index][1]
         width = float(ATT_TREES[index].sort_value[high]) - float(ATT_TREES[index].sort_value[low])
     else:
-        width = partition.width[index]
+        width = partition.attribute_width_list[index]
     return width * 1.0 / QI_RANGE[index]
 
 
@@ -71,7 +65,7 @@ def choose_dimension(partition):
     max_width = -1
     max_dim = -1
     for i in range(QI_LEN):
-        if partition.allow[i] == 0:
+        if partition.attribute_split_allowed_list[i] == 0:
             continue
         normWidth = get_normalized_width(partition, i)
         if normWidth > max_width:
@@ -92,7 +86,7 @@ def frequency_set(partition, dim):
     return dict{key: str values, values: count}
     """
     frequency = {}
-    for record in partition.member:
+    for record in partition.members:
         try:
             frequency[record[dim]] += 1
         except KeyError:
@@ -153,7 +147,7 @@ def split_numerical_value(numeric_value, splitVal):
         return lvalue, rvalue
 
 
-def split_numerical(partition, dim, pwidth, pmiddle):
+def split_numerical(partition, dim, pattribute_width_list, pattribute_generalization_list):
     """
     strict split numeric attribute by finding a median,
     lhs = [low, means], rhs = (mean, high]
@@ -165,20 +159,20 @@ def split_numerical(partition, dim, pwidth, pmiddle):
     p_high = ATT_TREES[dim].dict[high]
     # update middle
     if low == high:
-        pmiddle[dim] = low
+        pattribute_generalization_list[dim] = low
     else:
-        pmiddle[dim] = low + ',' + high
-    pwidth[dim] = (p_low, p_high)
+        pattribute_generalization_list[dim] = low + ',' + high
+    pattribute_width_list[dim] = (p_low, p_high)
     if splitVal == '' or splitVal == nextVal:
         # update middle
         return []
     middle_pos = ATT_TREES[dim].dict[splitVal]
-    lmiddle = pmiddle[:]
-    rmiddle = pmiddle[:]
-    lmiddle[dim], rmiddle[dim] = split_numerical_value(pmiddle[dim], splitVal)
+    lattribute_generalization_list = pattribute_generalization_list[:]
+    rattribute_generalization_list = pattribute_generalization_list[:]
+    lattribute_generalization_list[dim], rattribute_generalization_list[dim] = split_numerical_value(pattribute_generalization_list[dim], splitVal)
     lhs = []
     rhs = []
-    for temp in partition.member:
+    for temp in partition.members:
         pos = ATT_TREES[dim].dict[temp[dim]]
         if pos <= middle_pos:
             # lhs = [low, means]
@@ -186,22 +180,22 @@ def split_numerical(partition, dim, pwidth, pmiddle):
         else:
             # rhs = (mean, high]
             rhs.append(temp)
-    lwidth = pwidth[:]
-    rwidth = pwidth[:]
-    lwidth[dim] = (pwidth[dim][0], middle_pos)
-    rwidth[dim] = (ATT_TREES[dim].dict[nextVal], pwidth[dim][1])
-    sub_partitions.append(Partition(lhs, lwidth, lmiddle))
-    sub_partitions.append(Partition(rhs, rwidth, rmiddle))
+    lattribute_width_list = pattribute_width_list[:]
+    rattribute_width_list = pattribute_width_list[:]
+    lattribute_width_list[dim] = (pattribute_width_list[dim][0], middle_pos)
+    rattribute_width_list[dim] = (ATT_TREES[dim].dict[nextVal], pattribute_width_list[dim][1])
+    sub_partitions.append(Partition(lhs, lattribute_width_list, lattribute_generalization_list))
+    sub_partitions.append(Partition(rhs, rattribute_width_list, rattribute_generalization_list))
     return sub_partitions
 
 
-def split_categorical(partition, dim, pwidth, pmiddle):
+def split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list):
     """
     split categorical attribute using generalization hierarchy
     """
     sub_partitions = []
     # categoric attributes
-    splitVal = ATT_TREES[dim][partition.middle[dim]]
+    splitVal = ATT_TREES[dim][partition.attribute_generalization_list[dim]]
     sub_node = [t for t in splitVal.child]
     sub_groups = []
     for i in range(len(sub_node)):
@@ -209,7 +203,7 @@ def split_categorical(partition, dim, pwidth, pmiddle):
     if len(sub_groups) == 0:
         # split is not necessary
         return []
-    for temp in partition.member:
+    for temp in partition.members:
         qid_value = temp[dim]
         for i, node in enumerate(sub_node):
             try:
@@ -231,8 +225,8 @@ def split_categorical(partition, dim, pwidth, pmiddle):
         for i, sub_group in enumerate(sub_groups):
             if len(sub_group) == 0:
                 continue
-            wtemp = pwidth[:]
-            mtemp = pmiddle[:]
+            wtemp = pattribute_width_list[:]
+            mtemp = pattribute_generalization_list[:]
             wtemp[dim] = len(sub_node[i])
             mtemp[dim] = sub_node[i].value
             sub_partitions.append(Partition(sub_group, wtemp, mtemp))
@@ -243,12 +237,12 @@ def split_partition(partition, dim):
     """
     split partition and distribute records to different sub-partitions
     """
-    pwidth = partition.width
-    pmiddle = partition.middle
+    pattribute_width_list = partition.attribute_width_list
+    pattribute_generalization_list = partition.attribute_generalization_list
     if IS_CAT[dim] is False:
-        return split_numerical(partition, dim, pwidth, pmiddle)
+        return split_numerical(partition, dim, pattribute_width_list, pattribute_generalization_list)
     else:
-        return split_categorical(partition, dim, pwidth, pmiddle)
+        return split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list)
 
 
 def anonymize(partition):
@@ -257,7 +251,7 @@ def anonymize(partition):
     recursively partition groups until not allowable.
     """
     # print(len(partition)
-    # print(partition.allow
+    # print(partition.attribute_split_allowed_list
     # pdb.set_trace()
     if check_splitable(partition) is False:
         RESULT.append(partition)
@@ -269,7 +263,7 @@ def anonymize(partition):
         pdb.set_trace()
     sub_partitions = split_partition(partition, dim)
     if len(sub_partitions) == 0:
-        partition.allow[dim] = 0
+        partition.attribute_split_allowed_list[dim] = 0
         anonymize(partition)
     else:
         for sub_p in sub_partitions:
@@ -280,7 +274,7 @@ def check_splitable(partition):
     """
     Check if the partition can be further splited while satisfying k-anonymity.
     """
-    temp = sum(partition.allow)
+    temp = sum(partition.attribute_split_allowed_list)
     if temp == 0:
         return False
     return True
@@ -316,18 +310,18 @@ def mondrian(att_trees, data, k, QI_num=-1):
     """
     init(att_trees, data, k, QI_num)
     result = []
-    middle = []
+    attribute_generalization_list = []
     wtemp = []
     for i in range(QI_LEN):
         if IS_CAT[i] is False:
             QI_RANGE.append(ATT_TREES[i].range)
             wtemp.append((0, len(ATT_TREES[i].sort_value) - 1))
-            middle.append(ATT_TREES[i].value)
+            attribute_generalization_list.append(ATT_TREES[i].value)
         else:
             QI_RANGE.append(len(ATT_TREES[i]['*']))
             wtemp.append(len(ATT_TREES[i]['*']))
-            middle.append('*')
-    whole_partition = Partition(data, wtemp, middle)
+            attribute_generalization_list.append('*')
+    whole_partition = Partition(data, wtemp, attribute_generalization_list)
     start_time = time.time()
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
@@ -336,9 +330,9 @@ def mondrian(att_trees, data, k, QI_num=-1):
         r_ncp = 0.0
         for i in range(QI_LEN):
             r_ncp += get_normalized_width(partition, i)
-        temp = partition.middle
+        temp = partition.attribute_generalization_list
         for i in range(len(partition)):
-            result.append(temp + [partition.member[i][-1]])
+            result.append(temp + [partition.members[i][-1]])
         r_ncp *= len(partition)
         ncp += r_ncp
     # covert to NCP percentage
