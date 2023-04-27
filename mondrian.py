@@ -10,18 +10,19 @@ import pdb
 import time
 
 from typing import Tuple, List
+from models.gentree import GenTree
 
 from models.numrange import NumRange
 from models.partition import Partition
 
 
 __DEBUG = False
-QI_LEN = 10
-GL_K = 0
-RESULT = []
-ATT_TREES = []
+NUM_OF_QIDS_USED = 10
+GLOBAL_K = 0
+RESULT: List[Partition] = []
+ATT_TREES: List[GenTree | NumRange] = []
+IS_QID_CATEGORICAL: List[bool] = []
 QI_RANGE = []
-IS_CAT = []
 
 
 def get_normalized_width(partition: Partition, qid_index: int) -> float:    
@@ -34,7 +35,7 @@ def get_normalized_width(partition: Partition, qid_index: int) -> float:
             The index of the QID in the data
     """        
 
-    if IS_CAT[qid_index] is False:
+    if IS_QID_CATEGORICAL[qid_index] is False:
         low = partition.attribute_width_list[qid_index][0]
         high = partition.attribute_width_list[qid_index][1]
         width = float(ATT_TREES[qid_index].sort_value[high]) - float(ATT_TREES[qid_index].sort_value[low])
@@ -50,7 +51,7 @@ def choose_dimension(partition: Partition) -> int:
     max_norm_width = -1
     qid_index = -1
 
-    for i in range(QI_LEN):
+    for i in range(NUM_OF_QIDS_USED):
         if partition.attribute_split_allowed_list[i] == 0:
             continue
         
@@ -109,7 +110,7 @@ def get_median(partition: Partition, qid_index: int) -> Tuple[str, str, str, str
     middle_index_of_the_records = num_of_records / 2
 
     # If there are less then 2k values OR only one (or less) unique value, ...
-    if middle_index_of_the_records < GL_K or len(unique_values) <= 1:
+    if middle_index_of_the_records < GLOBAL_K or len(unique_values) <= 1:
         return ('', '', unique_values[0], unique_values[-1])
     
     records_processed = 0
@@ -208,8 +209,8 @@ def split_numerical_attribute(partition: Partition, qid_index: int) -> list[Part
     # The width of the new, "right" partition is composed of the next value after the median value we used and the end of the original range
     r_attribute_width_list[qid_index] = (ATT_TREES[qid_index].dict[next_unique_value], partition.attribute_width_list[qid_index][1])
 
-    sub_partitions.append(Partition(l_sub_partition, l_attribute_width_list, l_attribute_generalization_list, QI_LEN))
-    sub_partitions.append(Partition(r_sub_partition, r_attribute_width_list, r_attribute_generalization_list, QI_LEN))
+    sub_partitions.append(Partition(l_sub_partition, l_attribute_width_list, l_attribute_generalization_list, NUM_OF_QIDS_USED))
+    sub_partitions.append(Partition(r_sub_partition, r_attribute_width_list, r_attribute_generalization_list, NUM_OF_QIDS_USED))
 
     return sub_partitions
 
@@ -249,7 +250,7 @@ def split_categorical_attribute(partition: Partition, qid_index: int) -> list[Pa
         if len(sub_group) == 0:
             continue
         # If one child covers less than k elements, the split is invalid
-        if len(sub_group) < GL_K:
+        if len(sub_group) < GLOBAL_K:
             flag = False
             break
 
@@ -264,7 +265,7 @@ def split_categorical_attribute(partition: Partition, qid_index: int) -> list[Pa
             new_attribute_width_list[qid_index] = len(child_nodes[i])
             new_attribute_generalization_list[qid_index] = child_nodes[i].value
 
-            sub_partitions.append(Partition(sub_group, new_attribute_width_list, new_attribute_generalization_list, QI_LEN))
+            sub_partitions.append(Partition(sub_group, new_attribute_width_list, new_attribute_generalization_list, NUM_OF_QIDS_USED))
 
     return sub_partitions
 
@@ -272,7 +273,7 @@ def split_categorical_attribute(partition: Partition, qid_index: int) -> list[Pa
 
 def split_partition(partition, dim):
     """ Split partition and distribute records to different sub-partitions """    
-    if IS_CAT[dim] is False:
+    if IS_QID_CATEGORICAL[dim] is False:
         return split_numerical_attribute(partition, dim)
     else:
         return split_categorical_attribute(partition, dim)
@@ -313,22 +314,29 @@ def check_splitable(partition):
     return True
 
 
-def init(att_trees, data, k, QI_num=-1):
-    """
-    reset all global variables
-    """
-    global GL_K, RESULT, QI_LEN, ATT_TREES, QI_RANGE, IS_CAT
+def init(att_trees: List[GenTree | NumRange], data, k: int, QI_num=-1):
+    """ Reset all global variables """
+
+    # To change the value of a global variable inside a function, refer to the variable by using the global keyword:
+    global GLOBAL_K, RESULT, NUM_OF_QIDS_USED, ATT_TREES, QI_RANGE, IS_QID_CATEGORICAL
     ATT_TREES = att_trees
-    for t in att_trees:
-        if isinstance(t, NumRange):
-            IS_CAT.append(False)
+
+    # Based on the received attribute tree, map the attributes into a boolean array that reflects if they are categorical or not
+    for tree in att_trees:
+        if isinstance(tree, NumRange):
+            IS_QID_CATEGORICAL.append(False)
         else:
-            IS_CAT.append(True)
+            IS_QID_CATEGORICAL.append(True)
+
+    # Use all QIDs in this case
     if QI_num <= 0:
-        QI_LEN = len(data[0]) - 1
+        # We do not need the SA that is appended to each line as the last value
+        NUM_OF_QIDS_USED = len(data[0]) - 1
     else:
-        QI_LEN = QI_num
-    GL_K = k
+        # Use only the desired number of QIDs
+        NUM_OF_QIDS_USED = QI_num
+
+    GLOBAL_K = k
     RESULT = []
     QI_RANGE = []
 
@@ -345,8 +353,8 @@ def mondrian(att_trees, data, k, QI_num=-1):
     result = []
     attribute_generalization_list = []
     wtemp = []
-    for i in range(QI_LEN):
-        if IS_CAT[i] is False:
+    for i in range(NUM_OF_QIDS_USED):
+        if IS_QID_CATEGORICAL[i] is False:
             QI_RANGE.append(ATT_TREES[i].range)
             wtemp.append((0, len(ATT_TREES[i].sort_value) - 1))
             attribute_generalization_list.append(ATT_TREES[i].value)
@@ -354,14 +362,14 @@ def mondrian(att_trees, data, k, QI_num=-1):
             QI_RANGE.append(len(ATT_TREES[i]['*']))
             wtemp.append(len(ATT_TREES[i]['*']))
             attribute_generalization_list.append('*')
-    whole_partition = Partition(data, wtemp, attribute_generalization_list, QI_LEN)
+    whole_partition = Partition(data, wtemp, attribute_generalization_list, NUM_OF_QIDS_USED)
     start_time = time.time()
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
     ncp = 0.0
     for partition in RESULT:
         r_ncp = 0.0
-        for i in range(QI_LEN):
+        for i in range(NUM_OF_QIDS_USED):
             r_ncp += get_normalized_width(partition, i)
         temp = partition.attribute_generalization_list
         for i in range(len(partition)):
@@ -369,7 +377,7 @@ def mondrian(att_trees, data, k, QI_num=-1):
         r_ncp *= len(partition)
         ncp += r_ncp
     # covert to NCP percentage
-    ncp /= QI_LEN
+    ncp /= NUM_OF_QIDS_USED
     ncp /= len(data)
     ncp *= 100
     if len(result) != len(data):
