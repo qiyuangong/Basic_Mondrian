@@ -136,70 +136,82 @@ def get_median(partition: Partition, qid_index: int) -> Tuple[str, str, str, str
     return (unique_value_to_split_at, next_unique_value, unique_values[0], unique_values[-1])
 
 
-def split_numerical_value(numeric_value, splitVal):
-    """
-    split numeric value on splitVal
-    return sub ranges
-    """
-    split_num = numeric_value.split(',')
-    if len(split_num) <= 1:
-        return split_num[0], split_num[0]
+def split_numerical_value(numeric_value: str, value_to_split_at: int) -> Tuple[str, str] | str:
+    """ Split numeric value along value_to_split_at and return sub ranges """
+
+    range_min_and_max = numeric_value.split(',')
+    # If this is not a range ('20,30') any more, but a concrete number (20), simply return the number
+    if len(range_min_and_max) <= 1:
+        return range_min_and_max[0], range_min_and_max[0]    
     else:
-        low = split_num[0]
-        high = split_num[1]
-        # Fix 2,2 problem
-        if low == splitVal:
-            lvalue = low
+        min = range_min_and_max[0]
+        max = range_min_and_max[1]
+        # Create two new partitions using the [mix, value_to_split_at] and [value_to_split_at, max] new ranges
+        if min == value_to_split_at:
+            l_range = min
         else:
-            lvalue = low + ',' + splitVal
-        if high == splitVal:
-            rvalue = high
+            l_range = min + ',' + value_to_split_at
+        if max == value_to_split_at:
+            r_range = max
         else:
-            rvalue = splitVal + ',' + high
-        return lvalue, rvalue
+            r_range = value_to_split_at + ',' + max
+        return l_range, r_range
 
 
-def split_numerical(partition, dim, pattribute_width_list, pattribute_generalization_list):
-    """
-    strict split numeric attribute by finding a median,
-    lhs = [low, means], rhs = (mean, high]
-    """
-    sub_partitions = []
-    # numeric attributes
-    (splitVal, nextVal, low, high) = get_median(partition, dim)
-    p_low = ATT_TREES[dim].dict[low]
-    p_high = ATT_TREES[dim].dict[high]
+def split_numerical_attribute(partition: Partition, qid_index: int) -> list[Partition]:
+    """ Split numeric attribute by along the median, creating two new sub-partitions """
+
+    sub_partitions: List[Partition] = []
+
+    (unique_value_to_split_at, next_unique_value, min_unique_value, max_unique_value) = get_median(partition, qid_index)
+
+    p_low = ATT_TREES[qid_index].dict[min_unique_value]
+    p_high = ATT_TREES[qid_index].dict[max_unique_value]
+
     # update middle
-    if low == high:
-        pattribute_generalization_list[dim] = low
+    if min_unique_value == max_unique_value:
+        partition.attribute_generalization_list[qid_index] = min_unique_value
     else:
-        pattribute_generalization_list[dim] = low + ',' + high
-    pattribute_width_list[dim] = (p_low, p_high)
-    if splitVal == '' or splitVal == nextVal:
-        # update middle
-        return []
-    middle_pos = ATT_TREES[dim].dict[splitVal]
-    lattribute_generalization_list = pattribute_generalization_list[:]
-    rattribute_generalization_list = pattribute_generalization_list[:]
-    lattribute_generalization_list[dim], rattribute_generalization_list[dim] = split_numerical_value(pattribute_generalization_list[dim], splitVal)
-    lhs = []
-    rhs = []
-    for temp in partition.members:
-        pos = ATT_TREES[dim].dict[temp[dim]]
-        if pos <= middle_pos:
-            # lhs = [low, means]
-            lhs.append(temp)
-        else:
-            # rhs = (mean, high]
-            rhs.append(temp)
-    lattribute_width_list = pattribute_width_list[:]
-    rattribute_width_list = pattribute_width_list[:]
-    lattribute_width_list[dim] = (pattribute_width_list[dim][0], middle_pos)
-    rattribute_width_list[dim] = (ATT_TREES[dim].dict[nextVal], pattribute_width_list[dim][1])
-    sub_partitions.append(Partition(lhs, lattribute_width_list, lattribute_generalization_list, QI_LEN))
-    sub_partitions.append(Partition(rhs, rattribute_width_list, rattribute_generalization_list, QI_LEN))
-    return sub_partitions
+        partition.attribute_generalization_list[qid_index] = min_unique_value + ',' + max_unique_value
 
+    partition.attribute_width_list[qid_index] = (p_low, p_high)
+
+    if unique_value_to_split_at == '' or unique_value_to_split_at == next_unique_value:        
+        return []
+    
+    middle_value_index = ATT_TREES[qid_index].dict[unique_value_to_split_at]
+
+    l_attribute_generalization_list = partition.attribute_generalization_list[:]
+    r_attribute_generalization_list = partition.attribute_generalization_list[:]
+    l_attribute_generalization_list[qid_index], r_attribute_generalization_list[qid_index] = split_numerical_value(partition.attribute_generalization_list[qid_index], unique_value_to_split_at)
+    
+    l_sub_partition: List[Partition] = []
+    r_sub_partition: List[Partition] = []
+
+    for record in partition.members:
+        # The index of the attribute value of the record in the numrange.sort_value array
+        record_index = ATT_TREES[qid_index].dict[record[qid_index]]
+
+        if record_index <= middle_value_index:
+            # l_sub_partition = [min_unique_value, means]
+            l_sub_partition.append(record)
+        else:
+            # r_sub_partition = (mean, max_unique_value]
+            r_sub_partition.append(record)
+
+    # The normalized width of all attributes remain the same in the two newly created partitions, except for the one along which we execute the split
+    l_attribute_width_list = partition.attribute_width_list[:]
+    r_attribute_width_list = partition.attribute_width_list[:]
+
+    # The width of the new, "left" partition is composed of the beginning of the original range and the median value
+    l_attribute_width_list[qid_index] = (partition.attribute_width_list[qid_index][0], middle_value_index)
+    # The width of the new, "right" partition is composed of the next value after the median value we used and the end of the original range
+    r_attribute_width_list[qid_index] = (ATT_TREES[qid_index].dict[next_unique_value], partition.attribute_width_list[qid_index][1])
+
+    sub_partitions.append(Partition(l_sub_partition, l_attribute_width_list, l_attribute_generalization_list, QI_LEN))
+    sub_partitions.append(Partition(r_sub_partition, r_attribute_width_list, r_attribute_generalization_list, QI_LEN))
+
+    return sub_partitions
 
 def split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list):
     """
@@ -252,7 +264,7 @@ def split_partition(partition, dim):
     pattribute_width_list = partition.attribute_width_list
     pattribute_generalization_list = partition.attribute_generalization_list
     if IS_CAT[dim] is False:
-        return split_numerical(partition, dim, pattribute_width_list, pattribute_generalization_list)
+        return split_numerical_attribute(partition, dim)
     else:
         return split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list)
 
