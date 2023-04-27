@@ -42,41 +42,29 @@ def get_normalized_width(partition: Partition, qid_index: int) -> float:
     return width * 1.0 / QI_RANGE[qid_index]
 
 
-def get_normalized_width(partition, index):
-    """
-    return Normalized width of partition
-    similar to NCP
-    """
-    if IS_CAT[index] is False:
-        low = partition.attribute_width_list[index][0]
-        high = partition.attribute_width_list[index][1]
-        width = float(ATT_TREES[index].sort_value[high]) - float(ATT_TREES[index].sort_value[low])
-    else:
-        width = partition.attribute_width_list[index]
-    return width * 1.0 / QI_RANGE[index]
+def choose_dimension(partition: Partition) -> int:
+    """ Chooss QID with largest normlized Width and return its index. """
 
+    max_norm_width = -1
+    qid_index = -1
 
-def choose_dimension(partition):
-    """
-    chooss dim with largest normlized Width
-    return dim index.
-    """
-    max_width = -1
-    max_dim = -1
     for i in range(QI_LEN):
         if partition.attribute_split_allowed_list[i] == 0:
             continue
-        normWidth = get_normalized_width(partition, i)
-        if normWidth > max_width:
-            max_width = normWidth
-            max_dim = i
-    if max_width > 1:
-        print("Error: max_width > 1")
+        
+        normalized_width = get_normalized_width(partition, i)
+        if normalized_width > max_norm_width:
+            max_norm_width = normalized_width
+            qid_index = i
+
+    if max_norm_width > 1:
+        print("Error: max_norm_width > 1")
         pdb.set_trace()
-    if max_dim == -1:
+    if qid_index == -1:
         print("cannot find the max dim")
         pdb.set_trace()
-    return max_dim
+
+    return qid_index
 
 
 def frequency_set(partition, dim):
