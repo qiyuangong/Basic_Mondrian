@@ -9,6 +9,8 @@ main module of basic Mondrian
 import pdb
 import time
 
+from typing import Tuple
+
 from models.numrange import NumRange
 from models.partition import Partition
 
@@ -68,7 +70,7 @@ def choose_dimension(partition: Partition) -> int:
 
 
 def get_frequency_set(partition: Partition, qid_index: int) -> dict[str, int]:
-    """ Count the number of unique values in the dataset for the attribute of the specified index, and thus generate a frequency set    
+    """ Count the number of unique values in the dataset for the attribute with the specified index, and thus generate a frequency set    
     
     Returns
     -------
@@ -85,34 +87,53 @@ def get_frequency_set(partition: Partition, qid_index: int) -> dict[str, int]:
     return frequency_set
 
 
-def find_median(partition, dim):
+def get_median(partition: Partition, qid_index: int) -> Tuple[str, str, str, str]:
+    """ Find the middle of the partition
+
+    Returns
+    -------
+    (str, str, str, str)
+        unique_value_to_split_at: the median
+        next_unique_value: the unique value right after the median
+        unique_values[0]
+        unique_values[-1]
     """
-    find the middle of the partition
-    return splitVal
-    """
-    frequency = get_frequency_set(partition, dim)
-    splitVal = ''
-    value_list = list(frequency.keys())
-    value_list.sort(key=lambda x: int(x))
-    total = sum(frequency.values())
-    middle = total / 2
-    if middle < GL_K or len(value_list) <= 1:
-        return ('', '', value_list[0], value_list[-1])
-    index = 0
-    split_index = 0
-    for i, t in enumerate(value_list):
-        index += frequency[t]
-        if index >= middle:
-            splitVal = t
-            split_index = i
+
+    frequency_set = get_frequency_set(partition, qid_index)    
+    # Sort the unique values for the attribute with the specified index
+    unique_values = list(frequency_set.keys())
+    unique_values.sort(key=lambda x: int(x))
+    
+    # The number of records in the partition
+    num_of_records = sum(frequency_set.values())
+    middle_index_of_the_records = num_of_records / 2
+
+    # If there are less then 2k values OR only one (or less) unique value, ...
+    if middle_index_of_the_records < GL_K or len(unique_values) <= 1:
+        return ('', '', unique_values[0], unique_values[-1])
+    
+    records_processed = 0
+    unique_value_to_split_at = ''
+    unique_value_to_split_at_index = 0
+
+    for i, unique_value in enumerate(unique_values):
+        # Accumulate The number of records of the partition with the already processed unique values
+        records_processed += frequency_set[unique_value]
+        # If the number of records processed is more than half of the total amount of records in the partition, we have found the median
+        if records_processed >= middle_index_of_the_records:
+            unique_value_to_split_at = unique_value
+            unique_value_to_split_at_index = i
             break
+    # The else keyword in a for loop specifies a block of code to be executed when the loop is finished
     else:
-        print("Error: cannot find splitVal")
+        print("Error: cannot find unique_value_to_split_at")    
     try:
-        nextVal = value_list[split_index + 1]
+        next_unique_value = unique_values[unique_value_to_split_at_index + 1]
+    # If the unique value along which we are splitting is the last one in the list
     except IndexError:
-        nextVal = splitVal
-    return (splitVal, nextVal, value_list[0], value_list[-1])
+        next_unique_value = unique_value_to_split_at
+
+    return (unique_value_to_split_at, next_unique_value, unique_values[0], unique_values[-1])
 
 
 def split_numerical_value(numeric_value, splitVal):
@@ -145,7 +166,7 @@ def split_numerical(partition, dim, pattribute_width_list, pattribute_generaliza
     """
     sub_partitions = []
     # numeric attributes
-    (splitVal, nextVal, low, high) = find_median(partition, dim)
+    (splitVal, nextVal, low, high) = get_median(partition, dim)
     p_low = ATT_TREES[dim].dict[low]
     p_high = ATT_TREES[dim].dict[high]
     # update middle
