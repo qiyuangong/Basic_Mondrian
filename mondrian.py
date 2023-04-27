@@ -67,18 +67,22 @@ def choose_dimension(partition: Partition) -> int:
     return qid_index
 
 
-def frequency_set(partition, dim):
+def get_frequency_set(partition: Partition, qid_index: int) -> dict[str, int]:
+    """ Count the number of unique values in the dataset for the attribute of the specified index, and thus generate a frequency set    
+    
+    Returns
+    -------
+    dict
+        the keys are unique string values of the attribute, while the values are the count per unique key
     """
-    get the frequency_set of partition on dim
-    return dict{key: str values, values: count}
-    """
-    frequency = {}
+
+    frequency_set = {}
     for record in partition.members:
         try:
-            frequency[record[dim]] += 1
+            frequency_set[record[qid_index]] += 1
         except KeyError:
-            frequency[record[dim]] = 1
-    return frequency
+            frequency_set[record[qid_index]] = 1
+    return frequency_set
 
 
 def find_median(partition, dim):
@@ -86,7 +90,7 @@ def find_median(partition, dim):
     find the middle of the partition
     return splitVal
     """
-    frequency = frequency_set(partition, dim)
+    frequency = get_frequency_set(partition, dim)
     splitVal = ''
     value_list = list(frequency.keys())
     value_list.sort(key=lambda x: int(x))
