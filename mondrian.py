@@ -342,7 +342,7 @@ def init(att_trees: List[GenTree | NumRange], data, k: int, QI_num=-1):
     QI_RANGE = []
 
 
-def mondrian(att_trees, data, k, QI_num=-1):
+def mondrian(att_trees: list[GenTree | NumRange], data: list[list[str]], k: int, QI_num=-1):
     """
     basic Mondrian for k-anonymity.
     This fuction support both numeric values and categoric values.
@@ -353,19 +353,23 @@ def mondrian(att_trees, data, k, QI_num=-1):
     init(att_trees, data, k, QI_num)
     result = []
     attribute_generalization_list = []
-    wtemp = []
+    attribute_width_list = []
+
     for i in range(NUM_OF_QIDS_USED):
         if IS_QID_CATEGORICAL[i] is False:
             QI_RANGE.append(ATT_TREES[i].range)
-            wtemp.append((0, len(ATT_TREES[i].sort_value) - 1))
+            attribute_width_list.append((0, len(ATT_TREES[i].sort_value) - 1))
             attribute_generalization_list.append(ATT_TREES[i].value)
         else:
             QI_RANGE.append(len(ATT_TREES[i]['*']))
-            wtemp.append(len(ATT_TREES[i]['*']))
+            attribute_width_list.append(len(ATT_TREES[i]['*']))
             attribute_generalization_list.append('*')
-    whole_partition = Partition(data, wtemp, attribute_generalization_list, NUM_OF_QIDS_USED)
+
+    whole_partition = Partition(data, attribute_width_list, attribute_generalization_list, NUM_OF_QIDS_USED)
+    
     start_time = time.time()
     anonymize(whole_partition)
+
     rtime = float(time.time() - start_time)
     ncp = 0.0
     for partition in RESULT:
