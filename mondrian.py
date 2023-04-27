@@ -10,7 +10,6 @@ import pdb
 import random
 from models.numrange import NumRange
 from models.gentree import GenTree
-from utils.utility import cmp_str
 import time
 
 
@@ -108,8 +107,8 @@ def find_median(partition, dim):
     """
     frequency = frequency_set(partition, dim)
     splitVal = ''
-    value_list = frequency.keys()
-    value_list.sort(cmp=cmp_str)
+    value_list = list(frequency.keys())
+    value_list.sort(key=lambda x: int(x))
     total = sum(frequency.values())
     middle = total / 2
     if middle < GL_K or len(value_list) <= 1:

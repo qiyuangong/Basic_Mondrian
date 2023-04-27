@@ -66,7 +66,7 @@ def read_data():
         if IS_CAT[i] is False:
             static_file = open('data/adult_' + ATT_NAMES[QI_INDEX[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
-            sort_value.sort(cmp=cmp_str)
+            sort_value.sort(key=lambda x: int(x))
             pickle.dump((numeric_dict[i], sort_value), static_file)
             static_file.close()
     return data
