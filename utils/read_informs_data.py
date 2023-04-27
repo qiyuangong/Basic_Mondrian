@@ -61,7 +61,7 @@ def read_tree_file(treename):
     att_tree = {}
     prefix = 'data/informs_'
     postfix = ".txt"
-    treefile = open(prefix + treename + postfix, 'rU')
+    treefile = open(prefix + treename + postfix, newline=None)
     att_tree['*'] = GenTree('*')
     if __DEBUG:
         print( "Reading Tree" + treename)
@@ -93,8 +93,8 @@ def read_data(flag=0):
     read microda for *.txt and return read data
     """
     data = []
-    userfile = open('data/demographics.csv', 'rU')
-    conditionfile = open('data/conditions.csv', 'rU')
+    userfile = open('data/demographics.csv', newline=None)
+    conditionfile = open('data/conditions.csv', newline=None)
     userdata = {}
     numeric_dict = []
     QI_num = len(QI_INDEX)

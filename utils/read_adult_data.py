@@ -40,7 +40,7 @@ def read_data():
         numeric_dict.append(dict())
     # oder categorical attributes in intuitive order
     # here, we use the appear number
-    data_file = open('data/adult.data', 'rU')
+    data_file = open('data/adult.data', newline=None)
     for line in data_file:
         line = line.strip()
         # remove empty and incomplete lines
@@ -109,7 +109,7 @@ def read_tree_file(treename):
     att_tree = {}
     prefix = 'data/adult_'
     postfix = ".txt"
-    treefile = open(prefix + treename + postfix, 'rU')
+    treefile = open(prefix + treename + postfix, newline=None)
     att_tree['*'] = GenTree('*')
     if __DEBUG:
         print("Reading Tree" + treename)
