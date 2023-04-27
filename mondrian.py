@@ -45,7 +45,7 @@ def get_normalized_width(partition: Partition, qid_index: int) -> float:
     return width * 1.0 / QI_RANGE[qid_index]
 
 
-def choose_dimension(partition: Partition) -> int:
+def choose_qid(partition: Partition) -> int:
     """ Chooss QID with largest normlized Width and return its index. """
 
     max_norm_width = -1
@@ -64,7 +64,7 @@ def choose_dimension(partition: Partition) -> int:
         print("Error: max_norm_width > 1")
         pdb.set_trace()
     if qid_index == -1:
-        print("cannot find the max dim")
+        print("cannot find the max qid_index")
         pdb.set_trace()
 
     return qid_index
@@ -271,12 +271,12 @@ def split_categorical_attribute(partition: Partition, qid_index: int) -> list[Pa
 
 
 
-def split_partition(partition, dim):
+def split_partition(partition: Partition, qid_index: int):
     """ Split partition and distribute records to different sub-partitions """    
-    if IS_QID_CATEGORICAL[dim] is False:
-        return split_numerical_attribute(partition, dim)
+    if IS_QID_CATEGORICAL[qid_index] is False:
+        return split_numerical_attribute(partition, qid_index)
     else:
-        return split_categorical_attribute(partition, dim)
+        return split_categorical_attribute(partition, qid_index)
 
 
 def anonymize(partition: Partition):
@@ -291,15 +291,15 @@ def anonymize(partition: Partition):
         RESULT.append(partition)
         return
     
-    dim = choose_dimension(partition)
-    if dim == -1:
-        print("Error: dim=-1")
+    qid_index = choose_qid(partition)
+    if qid_index == -1:
+        print("Error: qid_index=-1")
         pdb.set_trace()
 
-    sub_partitions = split_partition(partition, dim)
+    sub_partitions = split_partition(partition, qid_index)
     if len(sub_partitions) == 0:
         # Close the attribute for this partition, as it cannot be split any more
-        partition.attribute_split_allowed_list[dim] = 0
+        partition.attribute_split_allowed_list[qid_index] = 0
         anonymize(partition)
     else:
         for sub_p in sub_partitions:
