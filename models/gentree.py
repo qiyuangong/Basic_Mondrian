@@ -21,7 +21,7 @@ class GenTree(object):
         self.level = 0
         self.leaf_num = 0
         self.parent = []
-        self.child = []
+        self.children = []
         self.cover = {}
         if value is not None:
             self.value = value
@@ -29,7 +29,7 @@ class GenTree(object):
         if parent is not None:
             self.parent = parent.parent[:]
             self.parent.insert(0, parent)
-            parent.child.append(self)
+            parent.children.append(self)
             self.level = parent.level + 1
             for t in self.parent:
                 t.cover[self.value] = self

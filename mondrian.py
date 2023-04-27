@@ -9,7 +9,7 @@ main module of basic Mondrian
 import pdb
 import time
 
-from typing import Tuple
+from typing import Tuple, List
 
 from models.numrange import NumRange
 from models.partition import Partition
@@ -213,60 +213,69 @@ def split_numerical_attribute(partition: Partition, qid_index: int) -> list[Part
 
     return sub_partitions
 
-def split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list):
-    """
-    split categorical attribute using generalization hierarchy
-    """
-    sub_partitions = []
-    # categoric attributes
-    splitVal = ATT_TREES[dim][partition.attribute_generalization_list[dim]]
-    sub_node = [t for t in splitVal.child]
+def split_categorical_attribute(partition: Partition, qid_index: int) -> list[Partition]:
+    """ Split categorical attribute using generalization hierarchy """
+
+    sub_partitions: List[Partition] = []
+    
+    node_to_split_at = ATT_TREES[qid_index][partition.attribute_generalization_list[qid_index]]
+    child_nodes = node_to_split_at.children[:]    
+
     sub_groups = []
-    for i in range(len(sub_node)):
+    for i in range(len(child_nodes)):
         sub_groups.append([])
-    if len(sub_groups) == 0:
-        # split is not necessary
+
+    # If the node (has no children, and thus) is a leaf, the partitioning is not possible >> []
+    if len(sub_groups) == 0:        
         return []
-    for temp in partition.members:
-        qid_value = temp[dim]
-        for i, node in enumerate(sub_node):
+    
+    for record in partition.members:
+        qid_value = record[qid_index]
+        for i, node in enumerate(child_nodes):
             try:
                 node.cover[qid_value]
-                sub_groups[i].append(temp)
+                # Store the records in the sub_groups array under the index that corresponds to the index of the child of the current node
+                sub_groups[i].append(record)
                 break
             except KeyError:
                 continue
+        # If for one of the records of the partition we do not find a QID value from the child nodes of the current node, it cannot be generalized
+        # In this case, the try block never reaches the break, thus the for runs all the way to the end and the execution reaches this else branch
         else:
             print("Generalization hierarchy error!")
+
     flag = True
-    for index, sub_group in enumerate(sub_groups):
+    for sub_group in sub_groups:
         if len(sub_group) == 0:
             continue
+        # If one child covers less than k elements, the split is invalid
         if len(sub_group) < GL_K:
             flag = False
             break
+
     if flag:
         for i, sub_group in enumerate(sub_groups):
             if len(sub_group) == 0:
                 continue
-            wtemp = pattribute_width_list[:]
-            mtemp = pattribute_generalization_list[:]
-            wtemp[dim] = len(sub_node[i])
-            mtemp[dim] = sub_node[i].value
-            sub_partitions.append(Partition(sub_group, wtemp, mtemp, QI_LEN))
+
+            new_attribute_width_list = partition.attribute_width_list[:]            
+            new_attribute_generalization_list = partition.attribute_generalization_list[:]
+
+            new_attribute_width_list[qid_index] = len(child_nodes[i])
+            new_attribute_generalization_list[qid_index] = child_nodes[i].value
+
+            sub_partitions.append(Partition(sub_group, new_attribute_width_list, new_attribute_generalization_list, QI_LEN))
+
     return sub_partitions
 
 
+
 def split_partition(partition, dim):
-    """
-    split partition and distribute records to different sub-partitions
-    """
-    pattribute_width_list = partition.attribute_width_list
-    pattribute_generalization_list = partition.attribute_generalization_list
+    """ Split partition and distribute records to different sub-partitions """    
     if IS_CAT[dim] is False:
         return split_numerical_attribute(partition, dim)
     else:
-        return split_categorical(partition, dim, pattribute_width_list, pattribute_generalization_list)
+        return split_categorical_attribute(partition, dim)
 
 
 def anonymize(partition):
