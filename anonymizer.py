@@ -16,26 +16,28 @@ DEFAULT_K = 10
 # sys.setrecursionlimit(50000)
 
 
+# If a list, concatenate its values into a string, separated by commas
 def extend_result(val):
-    """
-    separated with ',' if it is a list
-    """
+    # Check if val is a(n instance of) list
     if isinstance(val, list):
+        # The string join() method returns a string by joining all the elements of an iterable (list, string, tuple), separated by the given separator.
         return ','.join(val)
     return val
 
 
-def write_to_file(result):
-    """
-    write the anonymized result to anonymized.data
-    """
+# The input parameter result is the output of Mondrian
+# Write the anonymized result to anonymized.data
+def write_to_file(result):   
     with open("data/anonymized.data", "w") as output:
         for r in result:
+            # The map() function executes a specified function for each item in an iterable
+            #   map(extend_result, r):                      for each item in r, if that item is a list, make a string out of it separated by commas
+            #   ';'.join( <a list of strings> ) + '\n':     join the string list into one string, separated by semicolons
             output.write(';'.join(map(extend_result, r)) + '\n')
 
 
-def get_result_one(att_trees, data, k=DEFAULT_K):
-    "run basic_mondrian for one time, with k=10"
+# Run Mondrian once (with k, QIDs and the size of the dataset fixed)
+def get_result_one(att_trees, data, k=DEFAULT_K):    
     print("K=", k)
     print("Mondrian")
     result, eval_result = mondrian(att_trees, data, k)
@@ -44,11 +46,9 @@ def get_result_one(att_trees, data, k=DEFAULT_K):
     print("Running time %0.2f" % eval_result[1] + " seconds")
 
 
+# Run the algorithm with different k values (with QIDs and the size of the dataset fixed)
 def get_result_k(att_trees, data):
-    """
-    change k, whle fixing QD and size of dataset
-    """
-    data_back = copy.deepcopy(data)
+    data_backup = copy.deepcopy(data)
     all_ncp = []
     all_rtime = []
     # for k in range(5, 105, 5):
@@ -57,7 +57,7 @@ def get_result_k(att_trees, data):
         print("K=" + k)
         print("Mondrian")
         _, eval_result = mondrian(att_trees, data, k)
-        data = copy.deepcopy(data_back)
+        data = copy.deepcopy(data_backup)
         print("NCP %0.2f" % eval_result[0] + "%")
         all_ncp.append(round(eval_result[0], 2))
         print("Running time %0.2f" % eval_result[1] + " seconds")
@@ -66,34 +66,37 @@ def get_result_k(att_trees, data):
     print("All Running time", all_rtime)
 
 
+# Run the algorithm on dataset chunks of increasing size (with k and QIDs fixed)
+# For each chunk, carry out the anonymization n times and average the results for the NPC metric
 def get_result_dataset(att_trees, data, k=DEFAULT_K, n=10):
-    """
-    fix k and QI, while changing size of dataset
-    n is the proportion nubmber.
-    """
-    data_back = copy.deepcopy(data)
-    length = len(data_back)
+    data_backup = copy.deepcopy(data)
+    length = len(data_backup)
     print("K=%d" % k)
+    # The step by which to increase the size of the dataset in each iteration
     joint = 5000
     datasets = []
+    # Check how many times the dataset can be increased
     check_time = length / joint
     if length % joint == 0:
         check_time -= 1
+    # Store the chunks of dataset sizes to use
     for i in range(check_time):
         datasets.append(joint * (i + 1))
     datasets.append(length)
     all_ncp = []
     all_rtime = []
+
     for pos in datasets:
         ncp = rtime = 0
         print('#' * 30)
         print("size of dataset %d" % pos)
+        # n received as an input parameter, repeat that many times the [take random sample of size pos AND run mondrian]
         for j in range(n):
             temp = random.sample(data, pos)
             result, eval_result = mondrian(att_trees, temp, k)
             ncp += eval_result[0]
             rtime += eval_result[1]
-            data = copy.deepcopy(data_back)
+            data = copy.deepcopy(data_backup)
         ncp /= n
         rtime /= n
         print("Average NCP %0.2f" % ncp + "%")
@@ -105,11 +108,11 @@ def get_result_dataset(att_trees, data, k=DEFAULT_K, n=10):
     print("All Running time", all_rtime)
 
 
-def get_result_qi(att_trees, data, k=DEFAULT_K):
-    """
-    change nubmber of QI, whle fixing k and size of dataset
-    """
-    data_back = copy.deepcopy(data)
+# Run mondrian with setting the number of desired QIDs to use in each run (with k and the size of the dataset fixed)
+# Iterate from using 1 QID to using all of them
+def get_result_qi(att_trees, data, k=DEFAULT_K):    
+    data_backup = copy.deepcopy(data)
+    ## The number of attributes in one line
     ls = len(data[0])
     all_ncp = []
     all_rtime = []
@@ -117,7 +120,7 @@ def get_result_qi(att_trees, data, k=DEFAULT_K):
         print('#' * 30)
         print("Number of QI=%d" % i)
         _, eval_result = mondrian(att_trees, data, k, i)
-        data = copy.deepcopy(data_back)
+        data = copy.deepcopy(data_backup)
         print("NCP %0.2f" % eval_result[0] + "%")
         all_ncp.append(round(eval_result[0], 2))
         print("Running time %0.2f" % eval_result[1] + "seconds")
