@@ -22,27 +22,24 @@ QI_RANGE = []
 IS_CAT = []
 
 
-class Partition(object):
-
-    """Class for Group, which is used to keep records
-    Store tree node in instances.
-    self.members: records in the partition
-    Lists that store for each QID, under the index for the corresponding attribute,
-        self.attribute_width_list: the width, for categoric attribute, it equal the number of leaf node, for numeric attribute, it equal to number range
-        self.attribute_generalization_list: the result of the generalization
-        self.allow: 0 if the partition cannot be split further along the attribute, 1 otherwise
+def get_normalized_width(partition: Partition, qid_index: int) -> float:    
     """
+    Return Normalized width of partition. Similar to NCP        
 
-    def __init__(self, data, attribute_width_list, attribute_generalization_list):
-        self.members = list(data)
-        self.attribute_width_list = list(attribute_width_list)
-        self.attribute_generalization_list = list(attribute_generalization_list)
-        self.attribute_split_allowed_list = [1] * QI_LEN
+        Parameters
+        ----------
+        qid_index : int
+            The index of the QID in the data
+    """        
 
-    # The number of records in partition
-    def __len__(self):
-        
-        return len(self.members)
+    if IS_CAT[qid_index] is False:
+        low = partition.attribute_width_list[qid_index][0]
+        high = partition.attribute_width_list[qid_index][1]
+        width = float(ATT_TREES[qid_index].sort_value[high]) - float(ATT_TREES[qid_index].sort_value[low])
+    else:
+        width = partition.attribute_width_list[qid_index]
+
+    return width * 1.0 / QI_RANGE[qid_index]
 
 
 def get_normalized_width(partition, index):
